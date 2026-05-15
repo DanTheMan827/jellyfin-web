@@ -428,6 +428,13 @@ function getIsoTitles(itemId, serverId) {
     return Promise.resolve([]);
 }
 
+function discItemSupported(item, editorInfo) {
+    const isDvdItem = item.VideoType === 'Dvd' || (item.VideoType === 'Iso' && item.IsoType === 'Dvd');
+    const isBluRayItem = item.VideoType === 'BluRay' || (item.VideoType === 'Iso' && item.IsoType === 'BluRay');
+    return (isDvdItem && editorInfo?.SupportsDvdVideo)
+        || (isBluRayItem && editorInfo?.SupportsLibBluray);
+}
+
 function populateIsoTitles(context, titles, currentTitle) {
     const select = context.querySelector('#selectIsoPlaybackTitle');
     let html = "<option value=''>" + globalize.translate('LabelIsoPlaybackTitleDefault') + '</option>';
@@ -437,7 +444,7 @@ function populateIsoTitles(context, titles, currentTitle) {
         const duration = title.DurationTicks ? datetime.getDisplayRunningTime(title.DurationTicks) : '';
         const label = duration
             ? globalize.translate('LabelIsoPlaybackTitleEntry', title.TitleNumber, duration)
-            : globalize.translate('LabelIsoPlaybackTitleEntryNoduration', title.TitleNumber);
+            : globalize.translate('LabelIsoPlaybackTitleEntryNoDuration', title.TitleNumber);
         html += "<option value='" + title.TitleNumber + "'>" + escapeHtml(label) + '</option>';
     }
 
@@ -617,14 +624,7 @@ function setFieldVisibilities(context, item, editorInfo) {
         hideElement('#fld3dFormat', context);
     }
 
-    const isDvdItem = item.VideoType === 'Dvd'
-        || (item.VideoType === 'Iso' && item.IsoType === 'Dvd');
-    const isBluRayItem = item.VideoType === 'BluRay'
-        || (item.VideoType === 'Iso' && item.IsoType === 'BluRay');
-    const showIsoTitle = (isDvdItem && editorInfo?.SupportsDvdVideo)
-        || (isBluRayItem && editorInfo?.SupportsLibBluray);
-
-    if (showIsoTitle) {
+    if (discItemSupported(item, editorInfo)) {
         showElement('#fldIsoPlaybackTitle', context);
     } else {
         hideElement('#fldIsoPlaybackTitle', context);
@@ -1103,18 +1103,12 @@ function reload(context, itemId, serverId) {
             hideElement('#fldTagline', context);
         }
 
-        const isDvdItem = item.VideoType === 'Dvd'
-            || (item.VideoType === 'Iso' && item.IsoType === 'Dvd');
-        const isBluRayItem = item.VideoType === 'BluRay'
-            || (item.VideoType === 'Iso' && item.IsoType === 'BluRay');
-        const needsIsoTitles = (isDvdItem && metadataEditorInfo.SupportsDvdVideo)
-            || (isBluRayItem && metadataEditorInfo.SupportsLibBluray);
-
-        if (needsIsoTitles) {
+        if (discItemSupported(item, metadataEditorInfo)) {
             getIsoTitles(itemId, serverId).then(function (titles) {
                 populateIsoTitles(context, titles || [], item.IsoPlaybackTitle);
                 loading.hide();
-            }).catch(function () {
+            }).catch(function (err) {
+                console.error('Failed to load ISO titles', err);
                 loading.hide();
             });
         } else {

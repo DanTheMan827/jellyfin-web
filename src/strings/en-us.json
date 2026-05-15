@@ -798,7 +798,7 @@
     "LabelIsoPlaybackTitle": "Playback title",
     "LabelIsoPlaybackTitleDefault": "Default (longest title)",
     "LabelIsoPlaybackTitleEntry": "Title {0} ({1})",
-    "LabelIsoPlaybackTitleEntryNoduration": "Title {0}",
+    "LabelIsoPlaybackTitleEntryNoDuration": "Title {0}",
     "LabelIsoPlaybackTitleHelp": "Select which DVD/Blu-ray title to use for playback. Leave blank to use the default (longest) title.",
     "LabelLevel": "Level",
     "LabelLibraryPageSize": "Library page size",
